@@ -2,8 +2,10 @@ from os import listdir
 import pandas as pd
 
 def merge_dataframes(initial_year: int, final_year: int):
-    """Função que lê todos os arquivos presentes na pasta Data_extracts e os combina em um único dataframe"""
-    
+    """
+    Lê todos os arquivos presentes na pasta Data_extracts (exceto as de metadados)
+    e os combina em um único dataframe.
+    """
     dataframes = []
     for y in range(initial_year, final_year+1):
         year = str(y)
@@ -14,8 +16,8 @@ def merge_dataframes(initial_year: int, final_year: int):
         # Cria dataframe a partir do arquivo
         data = pd.read_csv(
             folder+'/'+filename,
-            usecols = lambda col: col != 'Series Name', # Filtra colunas que não serão úteis no momento
-            na_values = '..'    # Interpreta '..' como NaN (valor nulo)
+            usecols= lambda col: col!='Series Name', # Filtra colunas que não serão úteis no momento
+            na_values='..'    # Interpreta '..' como NaN (valor nulo)
         )
         data = data[:-5]        # remove as 5 últimas linhas (metadados)
         data = data.rename(columns={f'{year} [YR{year}]' : year})
