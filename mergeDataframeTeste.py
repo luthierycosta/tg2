@@ -1,16 +1,16 @@
-import os
 import pandas as pd
 import numpy as np
+from os import listdir
 
 
-finalData = pd.DataFrame()
+dataframes = []
 
-for i in range(2008, 2012+1):
+for y in range(2008, 2022+1):
 
-    year = str(i)
+    year = str(y)
     
     folder = './Data_extracts/' + year
-    [filename] = [file for file in os.listdir(folder) if file.endswith('_Data.csv')]
+    [filename] = [file for file in listdir(folder) if file.endswith('_Data.csv')]
     data = pd.read_csv(
         folder+'/'+filename,
         usecols = lambda col: col != 'Series Name',
@@ -20,19 +20,21 @@ for i in range(2008, 2012+1):
     data = data[:-5]
     data = data.rename(columns={f'{year} [YR{year}]' : year})
     
-    data['Year'] = i
+    data['Year'] = y
     
     data = data.pivot(index=['Country Name', 'Country Code', 'Year'], columns='Series Code', values=year)
-    newColumns = data.columns.difference(finalData.columns)
-    
+    dataframes.append(data)
 
-    finalData = pd.concat([finalData, data[newColumns]], axis=1)
+finalData = pd.concat(dataframes).sort_values(['Country Code', 'Year']).reset_index()
+
+# newColumns = data.columns.difference(finalData.columns)
+    
+# tempData = pd.concat([tempData, data], axis=1)
+# finalData = pd.concat([finalData, data[newColumns]], axis=1)
 
     #temp = pd.read_csv('./Data_extracts/'+year+'/'+r'{*}_Data.csv')
 
-finalData = finalData.sort_values(['Country Code', 'Year'])
 
 
-
-#print(os.listdir('./Data_extracts/2008'))
+#print(listdir('./Data_extracts/2008'))
 #newData = mergeDataframe(2008,2012)
