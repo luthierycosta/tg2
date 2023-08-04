@@ -4,10 +4,10 @@ import numpy as np
 
 
 df2010 = pd.DataFrame()
-base_folder = os.listdir('./data/2010')
+base_folder = os.listdir('./Data_extracts/2010')
 for base_file in base_folder:
     if base_file.endswith('_Data.csv'):
-        df2010 = pd.read_csv('./data/2010/' + base_file)
+        df2010 = pd.read_csv('./Data_extracts/2010/' + base_file)
 df2010 = df2010.drop(['Country Code', 'Series Name'], axis=1)
 df2010 = df2010.rename(columns={'2010 [YR2010]': '2010'})
 df2010['2010'] = df2010['2010'].replace('..', np.nan)
