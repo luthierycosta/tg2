@@ -1,7 +1,9 @@
 from os import listdir
 import pandas as pd
 
-def merge_dataframes(initial_year: int, final_year: int):
+BASE_FOLDER = './Data_extracts'
+
+def dataframes(initial_year: int, final_year: int):
     """
     Lê todos os arquivos presentes na pasta Data_extracts (exceto as de metadados)
     e os combina em um único dataframe.
@@ -10,7 +12,7 @@ def merge_dataframes(initial_year: int, final_year: int):
     for y in range(initial_year, final_year+1):
         year = str(y)
         # Obtém nome da pasta e do arquivo csv a ser lido
-        folder = './Data_extracts/' + year
+        folder = BASE_FOLDER+'/'+year
         [filename] = [file for file in listdir(folder) if file.endswith('_Data.csv')]
 
         # Cria dataframe a partir do arquivo
@@ -34,4 +36,20 @@ def merge_dataframes(initial_year: int, final_year: int):
     # Ao final do loop, faz a concatenação de todos os dataframes do array
     return pd.concat(dataframes).sort_values(['Country Name', 'Year']).reset_index(drop=True)
 
-df = merge_dataframes(2008,2022)
+
+def series_metadata():
+    """
+    Cria dicionário a partir da planilha de metadados dos indicadores socioeconômicos
+    associando o nome de cada indicador à sua chave única - uma string menor
+    """
+    folder = BASE_FOLDER + '/Metadata_series'
+    [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
+    return dict(
+        pd.read_excel(folder+'/'+filename, usecols=['Code','Indicator Name'])
+        .values)
+
+
+def countries_metadata():
+    folder = BASE_FOLDER + '/Metadata_countries'
+    [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
+    return pd.read_excel(folder+'/'+filename, index_col='Code')

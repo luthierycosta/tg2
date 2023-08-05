@@ -2,3 +2,4 @@
 *_Series - Metadata.csv
 *.zip
 *.xlsx
+__pycache__
