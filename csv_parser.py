@@ -3,7 +3,7 @@ import pandas as pd
 
 BASE_FOLDER = './Data_extracts'
 
-def dataframes(initial_year: int, final_year: int):
+def get_dataframes(initial_year: int, final_year: int):
     """
     Lê todos os arquivos presentes na pasta Data_extracts (exceto as de metadados)
     e os combina em um único dataframe.
@@ -37,7 +37,7 @@ def dataframes(initial_year: int, final_year: int):
     return pd.concat(dataframes).sort_values(['Country Name', 'Year']).reset_index(drop=True)
 
 
-def series_metadata():
+def get_series_metadata():
     """
     Cria dicionário a partir da planilha de metadados dos indicadores socioeconômicos
     associando o nome de cada indicador à sua chave única - uma string menor
@@ -49,7 +49,7 @@ def series_metadata():
         .values)
 
 
-def countries_metadata():
+def get_countries_metadata():
     folder = BASE_FOLDER + '/Metadata_countries'
     [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
     return pd.read_excel(folder+'/'+filename, index_col='Code')
