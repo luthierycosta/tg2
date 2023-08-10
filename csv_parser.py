@@ -37,16 +37,14 @@ def get_dataframes(initial_year: int, final_year: int):
     return pd.concat(dataframes).sort_values(['Country Name', 'Year']).reset_index(drop=True)
 
 
-def get_series_metadata():
+def get_indicators_metadata():
     """
     Cria dicionário a partir da planilha de metadados dos indicadores socioeconômicos
     associando o nome de cada indicador à sua chave única - uma string menor
     """
     folder = BASE_FOLDER + '/Metadata_series'
     [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
-    return dict(
-        pd.read_excel(folder+'/'+filename, usecols=['Code','Indicator Name'])
-        .values)
+    return pd.read_excel(folder+'/'+filename, index_col='Code')
 
 
 def get_countries_metadata():
