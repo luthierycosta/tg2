@@ -1,5 +1,4 @@
 # Ignorar arquivos redundantes relacionados às bases de dados
 *_Series - Metadata.csv
 *.zip
-*.xlsx
 __pycache__
