@@ -1,4 +1,4 @@
-""" Define parâmetros para a a obtenção dos dados de indicadores e de como serão tratados
+""" Define parâmetros para a extração do dataframe e de como ele será tratado
 """
 
 # Início do intervalo de anos do qual serão extraídos os dados
