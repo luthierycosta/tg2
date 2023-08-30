@@ -6,8 +6,8 @@ import csv_parser
 import params
 
 df = csv_parser.get_dataframes(params.initial_year, params.final_year)
-countries = csv_parser.get_countries_metadata()
-indicators = csv_parser.get_indicators_metadata()
+countries = csv_parser.get_metadata('Metadata_countries')
+indicators = csv_parser.get_metadata('Metadata_series')
 
 country_names = dict(countries['Table Name'])
 indicator_names = dict(indicators['Indicator Name'])
