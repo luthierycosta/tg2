@@ -9,7 +9,7 @@ final_year = 2017
 
 # Porcentagem de valores não-nulos que os indicadores precisam ter ao longo do dataframe
 # para não serem excluídos pelo filtro
-thresh = 0.7
+thresh = 0.8
 
 # Filtro de países que devem ser mantidos no dataframe
 countries = [

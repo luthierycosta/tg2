@@ -13,27 +13,28 @@ country_names = dict(countries['Table Name'])
 indicator_names = dict(indicators['Indicator Name'])
 
 # Filtra países mantendo apenas os que constam no arquivo params.py
-df = df[df['Country Name'].isin(params.countries)]
+# df = df[df['Country Name'].isin(params.countries)]
 
+# Dataframe/Gráfico que contabiliza a quantidade de valores vazios para cada indicador
+"""
 count_nan = df.isna().sum()[3:]
-
-count_nan_df = count_nan.to_frame() \
+count_nan = count_nan.to_frame() \
     .rename(columns={0: 'Count'}) \
     .sort_values(by='Count',ascending=False)
-
-
-count_nan_df['Series Name'] = pd.Series(indicator_names)
-
-# Gráfico que mostra o total de valores vazios pra cada indicador, considerando todos os registros
-count_nan_df.plot()
+count_nan['Series Name'] = pd.Series(indicator_names)
+count_nan.plot()
+"""
 
 # Filtra indicadores que possuem uma certa porcentagem de valores não-nulos
 filtered_df = df.dropna(axis=1, thresh=params.thresh*len(df))
 
-na_per_year = {}
-for year in range(params.initial_year, params.final_year+1):
-    na_per_year[year] = df[df['Year'] == year].isna().sum(axis=1).median()
-    
-# Gráfico que mostra a média de valores vazios por país, para cada ano
-peryear_df = pd.DataFrame.from_dict(na_per_year,orient='index')
-peryear_df.plot()
+
+# Dataframe/Gráfico que mostra a média de indicadores vazios por país, para cada ano
+"""
+na_per_year = {
+    year: df[df['Year'] == year].isna().sum(axis=1).median() \
+    for year in set(df['Year'])
+}
+na_per_year = pd.DataFrame.from_dict(na_per_year,orient='index')
+na_per_year.plot()
+"""
