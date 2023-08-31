@@ -19,8 +19,7 @@ count_nan = df.isna().sum()[3:]
 
 count_nan_df = count_nan.to_frame() \
     .rename(columns={0: 'Count'}) \
-    .sort_values(by='Count',ascending=False) \
-    .reset_index()
+    .sort_values(by='Count',ascending=False)
 
 
 count_nan_df['Series Name'] = pd.Series(indicator_names)
@@ -28,7 +27,7 @@ count_nan_df['Series Name'] = pd.Series(indicator_names)
 # Gráfico que mostra o total de valores vazios pra cada indicador, considerando todos os registros
 count_nan_df.plot()
 
-#Filtra indicadores que possuem mais de 80% de valores não-nulos e remove todo o resto
+# Filtra indicadores que possuem uma certa porcentagem de valores não-nulos
 filtered_df = df.dropna(axis=1, thresh=params.thresh*len(df))
 
 na_per_year = {}
