@@ -39,10 +39,10 @@ def get_dataframes(initial_year: int, final_year: int):
     return pd.concat(dataframes).sort_values(['Country Name', 'Year']).reset_index(drop=True)
 
 
-def get_metadata(folder_path: str):
+def get_metadata(folder_: str):
     """
     Cria um dataframe a partir da planilha de metadados contida na pasta informada 
     """
-    folder = DATA_PATH + folder_path
+    folder = DATA_PATH + folder_
     [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
     return pd.read_excel(folder+'/'+filename, index_col='Code')
