@@ -1,3 +1,5 @@
+""" O projeto em si. Usa o framework Pandas para mineração de dados dos indicadores
+"""
 import numpy as np
 import pandas as pd
 import matplotlib as mpl

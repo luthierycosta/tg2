@@ -1,15 +1,5 @@
-""" Define parâmetros para a extração e tratamento do dataframe
+""" Define parâmetros para o tratamento do dataframe
 """
-
-# Início do intervalo de anos do qual serão extraídos os dados
-initial_year = 2008
-
-# Final do intervalo de anos do qual serão extraídos os dados
-final_year = 2017
-
-# Porcentagem de valores não-nulos que os indicadores precisam ter ao longo do dataframe
-# para não serem excluídos pelo filtro
-thresh = 0.8
 
 # Filtro de países que devem ser mantidos no dataframe
 countries = [

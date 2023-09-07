@@ -1,3 +1,6 @@
+""" Módulo com as funções para extrair e lidar com os arquivos do repositório,
+onde estão contidos os dados a serem minerados.
+"""
 from os import listdir
 import pandas as pd
 
