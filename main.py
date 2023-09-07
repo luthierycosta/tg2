@@ -8,44 +8,51 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 import csv_parser
 
-# Parâmetros
+### Parâmetros
 
 INITIAL_YEAR = 2008
 FINAL_YEAR = 2017
 NOT_NAN_RATIO = 0.8
 COUNTRIES_TO_DROP = 20
 
-# Extração dos dados
+### Extração dos dados
 df = csv_parser.get_dataframes(INITIAL_YEAR, FINAL_YEAR)
 countries = csv_parser.get_metadata('Metadata_countries')
 indicators = csv_parser.get_metadata('Metadata_series')
 
-# Filtra países mantendo apenas os que constam no arquivo params.py
-# df = df[df['Country Name'].isin(params.countries)]
+### Dataframes e gráficos para ilustração
 
-
-# Dataframe que contabiliza a qtd. de valores vazios para cada indicador
-# (apenas para fins ilustrativos/plotagem. Não é usado no processamento)
+# Dataframe que mostra a qtd. de valores vazios para cada indicador
 nan_per_indicator = pd.DataFrame(df.isna().sum()[3:]) \
-    .rename(columns={0: 'Count'}) \
-    .sort_values(by='Count',ascending=False)
+    .rename(columns={0: 'NaN values'}) \
+    .sort_values(by='NaN values',ascending=False)
 nan_per_indicator['Name'] = indicators['Indicator Name']
 #nan_per_indicator.plot()
 
-# Filtra indicadores que possuem uma certa porcentagem de valores não-nulos
+# Dataframe que mostra a qtd. de indicadores vazios por ano, somando todos os países
+nan_per_year = sorted(
+    [[year, df[df['Year'] == year].isna().sum(axis=1).mean()]
+    for year in set(df['Year'])],
+    key=lambda arr: arr[0])
+nan_per_year = pd.DataFrame(nan_per_year, columns=['Year', 'NaN values'])
+#nan_per_year.plot()
+
+# Dataframe que mostra a qtd. de valores vazios para cada país, somando todos os anos
+nan_per_country = sorted([
+    [country, df[df['Country Name'] == country].isna().sum().sum()]
+    for country in set(df['Country Name'])],
+    key=lambda arr: arr[1], reverse=True)
+nan_per_country = pd.DataFrame(nan_per_country, columns=['Country Name', 'NaN values'])
+#nan_per_country.plot()
+
+
+### Pré-processamento
+
+# Mantém apenas indicadores que possuem uma porcentagem de valores não-nulos, conforme parâmetro
 df = df.dropna(axis=1, thresh=NOT_NAN_RATIO*len(df))
 
-# Dataframe que contabiliza a qtd. de valores vazios para cada país, somando os registros de todos os anos
-nan_per_country = pd.DataFrame(
-    sorted([
-        [country, df[df['Country Name'] == country].isna().sum().sum()]
-        for country in set(df['Country Name'])],
-        key=lambda arr: arr[1], reverse=True
-    ),
-    columns=['Country Name', 'NaN values']
-)
 
-# Remove países que possuem mais valores vazios
+# Remove os países que possuem mais valores vazios, conforme parâmetro
 df = df[~df['Country Name'].isin(nan_per_country.head(COUNTRIES_TO_DROP)['Country Name'])]
 
 
@@ -55,15 +62,9 @@ df = df[~df['Country Name'].isin(nan_per_country.head(COUNTRIES_TO_DROP)['Countr
 # Porque o RandomForest nao aceita valores vazios (não é capaz de interpolar)
 #df = df.dropna(axis=0)
 
-# Dataframe/Gráfico que mostra a média de indicadores vazios por país, para cada ano
-"""
-na_per_year = {
-    year: df[df['Year'] == year].isna().sum(axis=1).median() \
-    for year in set(df['Year'])
-}
-na_per_year = pd.DataFrame.from_dict(na_per_year,orient='index')
-na_per_year.plot()
-"""
+
+
+
 
 X = df.drop(columns=['Country Name','Country Code','Year','NY.GDP.MKTP.KD.ZG'])
 y = df['NY.GDP.MKTP.KD.ZG']
