@@ -7,17 +7,21 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest, mutual_info_regression
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+from sklearn.impute import KNNImputer
 import csv_parser
 
 ### Parâmetros
 
 INITIAL_YEAR = 2009
 FINAL_YEAR = 2018
-NOT_NAN_RATIO = 0.85
+NOT_NAN_FILTER = 0.85
 COUNTRIES_TO_DROP = 20
+TEST_SET_RATIO = 0.25
+FEATURES_TO_SELECT = 20
 
 ### Extração dos dados
+
 df = csv_parser.get_dataframes(INITIAL_YEAR, FINAL_YEAR)
 countries = csv_parser.get_metadata('Metadata_countries')
 indicators = csv_parser.get_metadata('Metadata_series')
@@ -31,9 +35,9 @@ nan_per_indicator = pd.DataFrame(df.isna().sum()[3:]) \
 nan_per_indicator['Name'] = indicators['Indicator Name']
 #nan_per_indicator.plot()
 
-# Dataframe que mostra a qtd. de indicadores vazios por ano, somando todos os países
+# Dataframe que mostra a qtd. de valores vazios por ano, contando todos os países
 nan_per_year = sorted(
-    [[year, df[df['Year'] == year].isna().sum(axis=1).sum()]
+    [[year, df[df['Year'] == year].isna().sum().sum()]
     for year in set(df['Year'])],
     key=lambda arr: arr[0])
 nan_per_year = pd.DataFrame(nan_per_year, columns=['Year', 'NaN values'])
@@ -53,37 +57,45 @@ nan_per_country = pd.DataFrame(nan_per_country, columns=['Country Name', 'NaN va
 df = df[~df['Country Name'].isin(nan_per_country.head(COUNTRIES_TO_DROP)['Country Name'])]
 
 # Mantém apenas indicadores que possuem uma porcentagem de valores não-nulos, conforme parâmetro
-df = df.dropna(axis=1, thresh=NOT_NAN_RATIO*len(df))
+df = df.dropna(axis=1, thresh=NOT_NAN_FILTER*len(df))
 
-# Exlui registros que possuem o crescimento do PIB (o objetivo do modelo) vazio
+# Exlui registros que possuem a variável "crescimento do PIB" (o alvo do modelo) vazia
 [gdp_growth_code] = indicators.query("`Indicator Name` == 'GDP growth (annual %)'").index
 df = df.dropna(subset=[gdp_growth_code])
 
-## Criação dos conjuntos de teste e treinamento
-    
+### Processamento dos conjuntos de teste e treinamento
+
+# Separa as variáveis de entrada (X) e variável alvo (y)    
 X = df.drop(columns=['Country Name','Country Code','Year'])
 y = df[gdp_growth_code]
 
+# Normaliza o conjunto de entrada
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X, y)
 
-X_scaled = StandardScaler().fit_transform(X)
-"""
+# Preenche os valores vazios no conjunto de entrada
+imputer = KNNImputer(n_neighbors=5, weights='uniform')
+X_imputed = imputer.fit_transform(X_scaled)
 
-# Após filtragem de indicadores, remove todas as linhas que ainda conterem valores vazios
-# Porque o RandomForest nao aceita valores vazios (não é capaz de interpolar)
-#df = df.dropna(axis=0)
+## Separa em conjuntos de teste e treinamento
+X_train, X_test, y_train, y_test = train_test_split(X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
+
+## Filtra os melhores indicadores, conforme parâmetro 
+feature_selector = SelectKBest(mutual_info_regression, k=FEATURES_TO_SELECT)
+feature_selector.fit_transform(X_train, y_train)
+X_train_selected = feature_selector.transform(X_train)
+X_test_selected = feature_selector.transform(X_test)
 
 
-# Select the top 3 most informative features using mutual information
-feature_selector = SelectKBest(mutual_info_regression, k=20)
-X_selected = feature_selector.fit_transform(X_scaled, y)
+### Aplicação dos modelos 
 
-# Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.2)
+random_forest = RandomForestRegressor(random_state=0)
+random_forest.fit(X_train_selected, y_train)
 
-# Train a Random Forest Regressor model on the training data
-model = RandomForestRegressor()
-model.fit(X_train, y_train)
+gradient_boosting = HistGradientBoostingRegressor(random_state=0)
+gradient_boosting.fit(X_train_selected, y_train)
 
-result = model.score(X_test, y_test)
-print (f'result: {result:.2f}')
-"""
+scores = (
+    random_forest.score(X_test_selected, y_test),
+    gradient_boosting.score(X_test_selected, y_test)
+)
