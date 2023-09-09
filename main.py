@@ -77,10 +77,10 @@ X_scaled = scaler.fit_transform(X, y)
 imputer = KNNImputer(n_neighbors=5, weights='uniform')
 X_imputed = imputer.fit_transform(X_scaled)
 
-## Separa em conjuntos de teste e treinamento
+# Separa em conjuntos de teste e treinamento
 X_train, X_test, y_train, y_test = train_test_split(X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
 
-## Filtra os melhores indicadores, conforme parâmetro 
+# Filtra os melhores indicadores, conforme parâmetro 
 feature_selector = SelectKBest(mutual_info_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit_transform(X_train, y_train)
 X_train_selected = feature_selector.transform(X_train)
