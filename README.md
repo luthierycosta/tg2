@@ -1,5 +1,3 @@
-# tg2
-
 # Trabalho de Graduação - Mineração de Dados
 
 Mineração de dados de indicadores socioeconômicos extraídos do Banco Mundial (World Bank), usando a linguagem Python e as bibliotecas Pandas e Scikit-Learn.
