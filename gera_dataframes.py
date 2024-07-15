@@ -20,8 +20,7 @@ def get_main_dataframe():
     return pd \
         .read_csv(
             EXTRACTS_PATH + MAIN_FILENAME,
-            usecols= lambda col: col!='Indicator Name',
-            na_values=''
+            usecols= lambda col: col!='Indicator Name'
             ) \
         .melt(
             id_vars=['Country Name', 'Country Code', 'Indicator Code'],
