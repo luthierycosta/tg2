@@ -4,7 +4,7 @@ onde estão contidos os dados a serem minerados.
 from os import listdir
 import pandas as pd
 
-DATA_PATH = './Data_extracts/'
+DATA_PATH = '../Data/old/'
 
 def get_dataframes(initial_year: int, final_year: int):
     """

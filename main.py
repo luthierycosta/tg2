@@ -5,17 +5,17 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectKBest, mutual_info_regression
+from sklearn.feature_selection import SelectKBest, r_regression, mutual_info_regression
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import KNNImputer
 import csv_parser
 
 ### Parâmetros
 
 INITIAL_YEAR = 2009
-FINAL_YEAR = 2018
-NOT_NAN_FILTER = 0.85
+FINAL_YEAR = 2022
+NOT_NAN_FILTER = 0.8
 COUNTRIES_TO_DROP = 20
 TEST_SET_RATIO = 0.25
 FEATURES_TO_SELECT = 20
@@ -70,18 +70,18 @@ X = df.drop(columns=['Country Name','Country Code','Year'])
 y = df[gdp_growth_code]
 
 # Normaliza o conjunto de entrada
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X, y)
+#scaler = StandardScaler()
+#X_scaled = scaler.fit_transform(X, y)
 
 # Preenche os valores vazios no conjunto de entrada
 imputer = KNNImputer(n_neighbors=5, weights='uniform')
-X_imputed = imputer.fit_transform(X_scaled)
+X_imputed = imputer.fit_transform(X)
 
 # Separa em conjuntos de teste e treinamento
 X_train, X_test, y_train, y_test = train_test_split(X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
 
 # Filtra os melhores indicadores, conforme parâmetro 
-feature_selector = SelectKBest(mutual_info_regression, k=FEATURES_TO_SELECT)
+feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit_transform(X_train, y_train)
 X_train_selected = feature_selector.transform(X_train)
 X_test_selected = feature_selector.transform(X_test)
@@ -92,10 +92,4 @@ X_test_selected = feature_selector.transform(X_test)
 random_forest = RandomForestRegressor(random_state=0)
 random_forest.fit(X_train_selected, y_train)
 
-gradient_boosting = HistGradientBoostingRegressor(random_state=0)
-gradient_boosting.fit(X_train_selected, y_train)
-
-scores = (
-    random_forest.score(X_test_selected, y_test),
-    gradient_boosting.score(X_test_selected, y_test)
-)
+score = random_forest.score(X_test_selected, y_test)
