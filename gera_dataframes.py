@@ -4,7 +4,7 @@ onde estão contidos os dados a serem minerados.
 import pandas as pd
 
 EXTRACTS_PATH = '../Data/WDI_CSV_2024_06_28/'
-WORKSPACE_PATH = './dataframes_tratados/'
+WORKSPACE_PATH = './dataframes_gerados/'
 MAIN_FILENAME = 'WDICSV.csv'
 COUNTRIES_FILENAME = 'WDICountry.csv'
 
