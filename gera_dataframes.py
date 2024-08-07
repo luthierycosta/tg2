@@ -4,10 +4,9 @@ a base de dados de sua pasta original.
 import pandas as pd
 
 EXTRACTS_PATH = '../Data/WDI_CSV_2024_06_28/'
-WORKSPACE_PATH = './dataframes/'
 RAW_FILENAME = 'WDICSV.csv'
-COUNTRIES_FILENAME = 'WDICountry.csv'
-SERIES_FILENAME = 'WDISeries.csv'
+
+WORKSPACE_PATH = './dataframes/'
 MAIN_FILENAME = 'WDItratado.csv'
 
 def get_wdi_dataframe():
