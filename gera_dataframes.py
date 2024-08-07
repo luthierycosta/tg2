@@ -1,25 +1,25 @@
-""" Módulo com as funções para extrair e lidar com os arquivos do repositório,
-onde estão contidos os dados a serem minerados.
+""" Módulo com as funções para extrair
+a base de dados de sua pasta original.
 """
 import pandas as pd
 
 EXTRACTS_PATH = '../Data/WDI_CSV_2024_06_28/'
-WORKSPACE_PATH = './dataframes_gerados/'
-MAIN_FILENAME = 'WDICSV.csv'
+WORKSPACE_PATH = './dataframes/'
+RAW_FILENAME = 'WDICSV.csv'
 COUNTRIES_FILENAME = 'WDICountry.csv'
+SERIES_FILENAME = 'WDISeries.csv'
+MAIN_FILENAME = 'WDItratado.csv'
 
-
-def get_main_dataframe():
+def get_wdi_dataframe():
     """
     Lê os dados extraídos em csv e o transforma em um dataframe Pandas,
     além de realizar o tratamento com melt+pivot para
     mover os anos para representação em linhas
     e os atributos (indicadores) para representação em colunas.
     """
-
     return pd \
         .read_csv(
-            EXTRACTS_PATH + MAIN_FILENAME,
+            EXTRACTS_PATH + RAW_FILENAME,
             usecols= lambda col: col!='Indicator Name'
             ) \
         .melt(
@@ -34,12 +34,6 @@ def get_main_dataframe():
             ) \
         .reset_index()
 
-"""
-def get_metadata(folder_: str):
-    folder = DATA_PATH + folder_
-    [filename] = [file for file in listdir(folder) if file.endswith('.xlsx')]
-    return pd.read_excel(folder+'/'+filename, index_col='Code')
-"""
-data = get_main_dataframe()
-data.to_csv(WORKSPACE_PATH + 'WDItratado.csv', index=False)
 
+data = get_wdi_dataframe()
+data.to_csv(WORKSPACE_PATH + MAIN_FILENAME, index=False)

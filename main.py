@@ -9,22 +9,28 @@ from sklearn.feature_selection import SelectKBest, r_regression, mutual_info_reg
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import KNNImputer
-import csv_parser
 
 ### Parâmetros
 
-INITIAL_YEAR = 2009
-FINAL_YEAR = 2022
+WORKSPACE_PATH = './dataframes/'
+MAIN_FILENAME = 'WDItratado.csv'
+RAW_FILENAME = 'WDICSV.csv'
+COUNTRIES_FILENAME = 'WDICountry.csv'
+SERIES_FILENAME = 'WDISeries.csv'
+
 NOT_NAN_FILTER = 0.8
 COUNTRIES_TO_DROP = 20
 TEST_SET_RATIO = 0.25
 FEATURES_TO_SELECT = 20
 
+
 ### Extração dos dados
 
-df = csv_parser.get_dataframes(INITIAL_YEAR, FINAL_YEAR)
-countries = csv_parser.get_metadata('Metadata_countries')
-indicators = csv_parser.get_metadata('Metadata_series')
+df = pd.read_csv(WORKSPACE_PATH + MAIN_FILENAME)
+raw_df = pd.read_csv(WORKSPACE_PATH + RAW_FILENAME)
+countries = pd.read_csv(WORKSPACE_PATH + COUNTRIES_FILENAME)
+indicators = pd.read_csv(WORKSPACE_PATH + SERIES_FILENAME)
+
 
 ### Dataframes e gráficos para ilustração sobre o dataset inicial
 
