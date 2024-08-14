@@ -34,31 +34,32 @@ indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
 indicators.to_csv(INDICATORS_RESUMED_PATH, columns=['Indicator Name'])
 
 
-### Dataframes e gráficos para ilustração sobre o dataset inicial
+### Variáveis para análise sobre o dataset inicial
+
+total_nan = df.isna().sum()
+total_indicators = len(df.columns) - 3
+total_years = len(df.groupby('Year'))
 
 # Dataframe que mostra a qtd. de valores vazios para cada indicador
-nan_per_indicator = pd.DataFrame(df.isna().sum()[3:]) \
-    .rename(columns={0: 'NaN values'}) \
-    .sort_values(by='NaN values', ascending=False)
-nan_per_indicator['Name'] = indicators['Indicator Name']
-# nan_per_indicator.plot()
+nan_per_indicator = df.isna().sum()[3:] \
+    .to_frame().rename(columns={0: 'NaN values'})
+nan_per_indicator.insert(0, 'Name', indicators['Indicator Name'])
 
-# Dataframe que mostra a qtd. de valores vazios por ano, somando todos os países e indicadores
+# Série que mostra a qtd. de valores vazios por ano, somando todos os países e indicadores
 nan_per_year = raw_df.isna().sum()[4:]
+
+# Série que mostra a qtd. de valores vazios para cada país, somando todos os anos
+nan_per_country = df.groupby(['Country Code', 'Country Name']) \
+    .count() \
+    .drop(columns='Year') \
+    .sum(axis=1) \
+    .apply(lambda x: total_indicators * total_years - x)
+
+    
+### Plotagem de gráficos para análise sobre o dataset inicial
+
+# nan_per_indicator.plot()
 nan_per_year.plot(xlabel='Year', ylim=(0, 400000))
-
-nan_per_year_b = raw_df.isna().sum()[4:]
-nan_per_year_b = nan_per_year_b.to_frame().reset_index()
-nan_per_year_b.columns = ['Year', 'NaN values']
-nan_per_year_b.plot(x='Year', ylim=(0, 400000))
-
-# Dataframe que mostra a qtd. de valores vazios para cada país, somando todos os anos
-nan_per_country = sorted([
-    [country, df[df['Country Name'] == country].isna().sum().sum()]
-    for country in set(df['Country Name'])],
-    key=lambda arr: arr[1], reverse=True)
-nan_per_country = pd.DataFrame(nan_per_country, columns=['Country Name', 'NaN values'])
-
 
 ### Pré-processamento
 
