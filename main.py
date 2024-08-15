@@ -12,69 +12,91 @@ from sklearn.impute import KNNImputer
 
 ### Parâmetros
 
-WORKSPACE_PATH = './dataframes/'
-MAIN_DF_PATH = WORKSPACE_PATH + 'WDItratado.csv'
-RAW_DF_PATH = WORKSPACE_PATH + 'WDICSV.csv'
-COUNTRIES_PATH = WORKSPACE_PATH + 'WDICountry.csv'
-INDICATORS_RESUMED_PATH = WORKSPACE_PATH + 'WDISeriesResumed.csv'
-INDICATORS_PATH = WORKSPACE_PATH + 'WDISeries.csv'
+DATAFRAMES_PATH = './dataframes/'
+TABLES_PATH = './dataframes/incluir_no_tcc_como_tabelas/'
 
-NOT_NAN_FILTER = 0.7
-COUNTRIES_TO_DROP = 28
-YEARS_TO_DROP = 16
+MAIN_DF_PATH = DATAFRAMES_PATH + 'WDItratado.csv'
+RAW_DF_PATH = DATAFRAMES_PATH + 'WDICSV.csv'
+COUNTRIES_PATH = DATAFRAMES_PATH + 'WDICountry.csv'
+INDICATORS_PATH = DATAFRAMES_PATH + 'WDISeries.csv'
+
+
+YEARS_TO_DROP = 16      # 1/4 do total de anos
+COUNTRIES_TO_DROP = 28  # aprox. 10% dos 266 países
+NOT_NAN_FILTER = 0.6   # exclui todo indicador com + de 40% valores nulos
 TEST_SET_RATIO = 0.25
 FEATURES_TO_SELECT = 20
 
 ### Extração dos dados
 
-df = pd.read_csv(MAIN_DF_PATH)
-raw_df = pd.read_csv(RAW_DF_PATH)
+wdi = pd.read_csv(MAIN_DF_PATH)
+raw_wdi = pd.read_csv(RAW_DF_PATH)
 countries = pd.read_csv(COUNTRIES_PATH, index_col='Country Code')
 indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
-indicators.to_csv(INDICATORS_RESUMED_PATH, columns=['Indicator Name'])
 
 
 ### Variáveis para análise sobre o dataset inicial
 
-total_nan = df.isna().sum()
-total_indicators = len(df.columns) - 3
-total_years = len(df.groupby('Year'))
+total_indicators = len(indicators)
+total_countries = len(countries)
+total_years = len(wdi.groupby('Year'))
+total_nan = wdi.isna().sum().sum()
+total_values = total_countries * total_indicators * total_years
 
 # Dataframe que mostra a qtd. de valores vazios para cada indicador
-nan_per_indicator = df.isna().sum()[3:] \
+nan_per_indicator = wdi.isna().sum()[3:] \
     .to_frame().rename(columns={0: 'NaN values'})
 nan_per_indicator.insert(0, 'Name', indicators['Indicator Name'])
+nan_per_indicator.insert(2, 'Percentage', (nan_per_indicator['NaN values'] / len(wdi) * 100).round(2))
 
 # Série que mostra a qtd. de valores vazios por ano, somando todos os países e indicadores
-nan_per_year = raw_df.isna().sum()[4:]
+nan_per_year = raw_wdi.isna().sum()[4:]
 
 # Série que mostra a qtd. de valores vazios para cada país, somando todos os anos
-nan_per_country = df.groupby(['Country Code', 'Country Name']) \
+nan_per_country = wdi.groupby(['Country Code', 'Country Name']) \
     .count() \
     .drop(columns='Year') \
     .sum(axis=1) \
-    .apply(lambda x: total_indicators * total_years - x)
+    .apply(lambda x: total_indicators * total_years - x) \
+    .to_frame('NaN values') \
+    .reset_index()
 
     
-### Plotagem de gráficos para análise sobre o dataset inicial
+### Criação de gráficos e tabelas para análise sobre o dataset inicial
 
-# nan_per_indicator.plot()
-nan_per_year.plot(xlabel='Year', ylim=(0, 400000))
+nan_per_indicator['NaN values'].plot.hist(
+    xlabel='Qtd. de valores nulos',
+    ylabel='Frequência dos indicadores',
+    bins=20,
+    grid=True)
+nan_per_year.plot(
+    xlabel='Ano',
+    ylabel='Valores nulos',
+    ylim=(0, 400000),
+    grid=True)
+
 
 ### Pré-processamento
 
-# Remove os anos que possuem mais valores vazios, conforme parâmetro
-df = df[~df['Year'].isin(nan_per_year.nlargest(YEARS_TO_DROP).index.astype(int))]
+emptiest_indicators = nan_per_indicator.nlargest(50, 'NaN values')
+emptiest_years = nan_per_year.nlargest(YEARS_TO_DROP)
+emptiest_countries = nan_per_country.nlargest(COUNTRIES_TO_DROP, 'NaN values')
 
-# Remove os países que possuem mais valores vazios, conforme parâmetro
-df = df[~df['Country Name'].isin(nan_per_country.head(COUNTRIES_TO_DROP)['Country Name'])]
-
-# Mantém apenas indicadores que possuem uma porcentagem de valores não-nulos, conforme parâmetro
-df = df.dropna(axis=1, thresh=NOT_NAN_FILTER*len(df))
 
 # Exlui registros que possuem a variável "crescimento do PIB" (o alvo do modelo) vazia
 [gdp_growth_code] = indicators.query("`Indicator Name` == 'GDP growth (annual %)'").index
-df = df.dropna(subset=[gdp_growth_code])
+wdi = wdi.dropna(subset=[gdp_growth_code])
+
+# Remove os anos que possuem mais valores vazios, conforme parâmetro
+wdi = wdi[~wdi['Year'].isin(emptiest_years.index.astype(int))]
+
+# Remove os países que possuem mais valores vazios, conforme parâmetro
+wdi = wdi[~wdi['Country Code'].isin(emptiest_countries['Country Code'])]
+
+# Mantém apenas indicadores que possuem uma porcentagem de valores não-nulos, conforme parâmetro
+wdi = wdi.dropna(axis=1, thresh=NOT_NAN_FILTER*len(wdi))
+
+
 
 
 ### Processamento dos conjuntos de teste e treinamento
@@ -83,12 +105,12 @@ df = df.dropna(subset=[gdp_growth_code])
 gdp_indicators = indicators[indicators['Indicator Name'].str.contains("GDP")]
 gni_indicators = indicators[indicators['Indicator Name'].str.contains("GNI")]
 
-gdp_indicators.to_csv(WORKSPACE_PATH + 'GDPindicators.csv', columns=['Indicator Name'])
+gdp_indicators.to_csv(DATAFRAMES_PATH + 'IndicadoresPIB.csv', columns=['Indicator Name'])
 
 # Separa as variáveis de entrada (X) e variável alvo (y)
 # e remove as variáveis relacionadas ao PIB
-X = df.drop(columns=['Country Name', 'Country Code', 'Year'])
-y = df[gdp_growth_code]
+X = wdi.drop(columns=['Country Name', 'Country Code', 'Year'])
+y = wdi[gdp_growth_code]
 
 # Normaliza o conjunto de entrada
 # scaler = StandardScaler()
