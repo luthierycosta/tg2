@@ -21,9 +21,9 @@ COUNTRIES_PATH = DATAFRAMES_PATH + 'WDICountry.csv'
 INDICATORS_PATH = DATAFRAMES_PATH + 'WDISeries.csv'
 
 
-YEARS_TO_DROP = 16      # 1/4 do total de anos
-COUNTRIES_TO_DROP = 28  # aprox. 10% dos 266 países
-NOT_NAN_FILTER = 0.6   # exclui todo indicador com + de 40% valores nulos
+YEARS_TO_DROP = 16                  # 1/4 do total de anos
+COUNTRIES_TO_DROP = 28              # aprox. 10% dos 266 países e regiões
+INDICATORS_NOT_NAN_THRESHOLD = 0.6  # exclui todo indicador com + de 40% valores nulos
 TEST_SET_RATIO = 0.25
 FEATURES_TO_SELECT = 20
 
@@ -37,8 +37,8 @@ indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
 
 ### Variáveis para análise sobre o dataset inicial
 
-total_indicators = len(indicators)
-total_countries = len(countries)
+total_indicators = len(wdi.columns) - 3
+total_countries = len(wdi.groupby('Country Code'))
 total_years = len(wdi.groupby('Year'))
 total_nan = wdi.isna().sum().sum()
 total_values = total_countries * total_indicators * total_years
@@ -66,7 +66,7 @@ nan_per_country = wdi.groupby(['Country Code', 'Country Name']) \
 
 nan_per_indicator['NaN values'].plot.hist(
     xlabel='Qtd. de valores nulos',
-    ylabel='Frequência dos indicadores',
+    ylabel='Frequência de indicadores',
     bins=20,
     grid=True)
 nan_per_year.plot(
@@ -94,7 +94,7 @@ wdi = wdi[~wdi['Year'].isin(emptiest_years.index.astype(int))]
 wdi = wdi[~wdi['Country Code'].isin(emptiest_countries['Country Code'])]
 
 # Mantém apenas indicadores que possuem uma porcentagem de valores não-nulos, conforme parâmetro
-wdi = wdi.dropna(axis=1, thresh=NOT_NAN_FILTER*len(wdi))
+wdi = wdi.dropna(axis=1, thresh=INDICATORS_NOT_NAN_THRESHOLD*len(wdi))
 
 
 
