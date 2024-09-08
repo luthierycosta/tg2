@@ -108,8 +108,10 @@ gni_indicators = indicators[indicators['Indicator Name'].str.contains("GNI")]
 gdp_indicators.to_csv(DATAFRAMES_PATH + 'IndicadoresPIB.csv', columns=['Indicator Name'])
 
 # Separa as variáveis de entrada (X) e variável alvo (y)
-# e remove as variáveis relacionadas ao PIB
-X = wdi.drop(columns=['Country Name', 'Country Code', 'Year'])
+# TODO: remove as variáveis relacionadas ao PIB
+wdi = wdi.set_index(['Country Name', 'Country Code', 'Year'])
+X = wdi.drop(columns=[gdp_growth_code])
+X = wdi.drop(columns=gdp_indicators.index, errors='ignore')
 y = wdi[gdp_growth_code]
 
 # Normaliza o conjunto de entrada
@@ -117,16 +119,19 @@ y = wdi[gdp_growth_code]
 # X_scaled = scaler.fit_transform(X, y)
 
 # Preenche os valores vazios no conjunto de entrada
-imputer = KNNImputer(n_neighbors=5, weights='uniform')
+
+imputer = KNNImputer(n_neighbors=25, weights='uniform')
 X_imputed = imputer.fit_transform(X)
+X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
+
 
 # Separa em conjuntos de teste e treinamento
 X_train, X_test, y_train, y_test = train_test_split(
     X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
 
 # Filtra os melhores indicadores, conforme parâmetro
-feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
-feature_selector.fit_transform(X_train, y_train)
+feature_selector = SelectKBest(mutual_info_regression, k=FEATURES_TO_SELECT)
+feature_selector.fit(X_train, y_train)
 X_train_selected = feature_selector.transform(X_train)
 X_test_selected = feature_selector.transform(X_test)
 
