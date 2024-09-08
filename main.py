@@ -13,7 +13,7 @@ from sklearn.impute import KNNImputer
 ### Parâmetros
 
 DATAFRAMES_PATH = './dataframes/'
-TABLES_PATH = './dataframes/incluir_no_tcc_como_tabelas/'
+TABLES_PATH = './material_overleaf/tabelas/'
 
 MAIN_DF_PATH = DATAFRAMES_PATH + 'WDItratado.csv'
 RAW_DF_PATH = DATAFRAMES_PATH + 'WDICSV.csv'
@@ -24,6 +24,7 @@ INDICATORS_PATH = DATAFRAMES_PATH + 'WDISeries.csv'
 YEARS_TO_DROP = 16                  # 1/4 do total de anos
 COUNTRIES_TO_DROP = 28              # aprox. 10% dos 266 países e regiões
 INDICATORS_NOT_NAN_THRESHOLD = 0.6  # exclui todo indicador com + de 40% valores nulos
+KNN_IMPUTER_NEIGHBOURS = 10
 TEST_SET_RATIO = 0.25
 FEATURES_TO_SELECT = 20
 
@@ -101,17 +102,9 @@ wdi = wdi.dropna(axis=1, thresh=INDICATORS_NOT_NAN_THRESHOLD*len(wdi))
 
 ### Processamento dos conjuntos de teste e treinamento
 
-# TODO: REMOVER ESSES INDICADORES DO CONJUNTO DE TREINAMENTO
-gdp_indicators = indicators[indicators['Indicator Name'].str.contains("GDP")]
-gni_indicators = indicators[indicators['Indicator Name'].str.contains("GNI")]
-
-gdp_indicators.to_csv(DATAFRAMES_PATH + 'IndicadoresPIB.csv', columns=['Indicator Name'])
-
 # Separa as variáveis de entrada (X) e variável alvo (y)
-# TODO: remove as variáveis relacionadas ao PIB
 wdi = wdi.set_index(['Country Name', 'Country Code', 'Year'])
 X = wdi.drop(columns=[gdp_growth_code])
-X = wdi.drop(columns=gdp_indicators.index, errors='ignore')
 y = wdi[gdp_growth_code]
 
 # Normaliza o conjunto de entrada
@@ -120,9 +113,10 @@ y = wdi[gdp_growth_code]
 
 # Preenche os valores vazios no conjunto de entrada
 
-imputer = KNNImputer(n_neighbors=25, weights='uniform')
+imputer = KNNImputer(n_neighbors=KNN_IMPUTER_NEIGHBOURS, weights='uniform')
 X_imputed = imputer.fit_transform(X)
 X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
+
 
 
 # Separa em conjuntos de teste e treinamento
