@@ -26,7 +26,7 @@ COUNTRIES_TO_DROP = 28              # aprox. 10% dos 266 países e regiões
 INDICATORS_NOT_NAN_THRESHOLD = 0.6  # exclui todo indicador com + de 40% valores nulos
 KNN_IMPUTER_NEIGHBOURS = 10
 TEST_SET_RATIO = 0.25
-FEATURES_TO_SELECT = 20
+FEATURES_TO_SELECT = 32
 
 ### Extração dos dados
 
@@ -124,10 +124,25 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
 
 # Filtra os melhores indicadores, conforme parâmetro
-feature_selector = SelectKBest(mutual_info_regression, k=FEATURES_TO_SELECT)
+feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit(X_train, y_train)
-X_train_selected = feature_selector.transform(X_train)
-X_test_selected = feature_selector.transform(X_test)
+X_train_selected = pd.DataFrame(
+    feature_selector.transform(X_train),
+    columns = X_train.columns[feature_selector.get_support()],
+    index = X_train.index
+)
+X_test_selected = pd.DataFrame(
+    feature_selector.transform(X_test),
+    columns = X_test.columns[feature_selector.get_support()],
+    index = X_test.index
+)
+
+selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
+selected_indicators.to_csv(
+    TABLES_PATH +'selecaoIndicadores.csv',
+    columns = ['Topic', 'Indicator Name']
+)
+
 
 
 ### Aplicação dos modelos
