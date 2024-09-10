@@ -34,6 +34,11 @@ wdi = pd.read_csv(MAIN_DF_PATH)
 raw_wdi = pd.read_csv(RAW_DF_PATH)
 countries = pd.read_csv(COUNTRIES_PATH, index_col='Country Code')
 indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
+indicators['Indicator Name'] = indicators['Indicator Name'].map(lambda x: x if len(x) <= 49 else x[:49] + '...')
+indicators.sort_values(['Topic']).to_csv(
+    TABLES_PATH + 'indicadoresfull.csv',
+    columns = ['Indicator Name']
+)
 
 
 ### Variáveis para análise sobre o dataset inicial
@@ -140,7 +145,7 @@ X_test_selected = pd.DataFrame(
 selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
 selected_indicators.to_csv(
     TABLES_PATH +'selecaoIndicadores.csv',
-    columns = ['Topic', 'Indicator Name']
+    columns = ['Indicator Name']
 )
 
 
