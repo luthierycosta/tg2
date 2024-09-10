@@ -1,11 +1,9 @@
 """ O projeto em si. Usa o framework Pandas para mineração de dados dos indicadores do WorldBank.
 """
-import numpy as np
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-# from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectKBest, r_regression, mutual_info_regression
+
+from sklearn.feature_selection import SelectKBest, r_regression
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import KNNImputer
@@ -156,3 +154,31 @@ random_forest = RandomForestRegressor(random_state=0)
 random_forest.fit(X_train_selected, y_train)
 
 score = random_forest.score(X_test_selected, y_test)
+
+
+
+### Criação de gráficos para análise sobre o resultado
+## Calcula a previsão sobre os dados de teste
+
+y_pred = random_forest.predict(X_test_selected)
+
+# Cria um gráfico de disperção
+plt.scatter(y_test, y_pred, alpha=0.5)
+plt.xlabel('Valores Reais')
+plt.ylabel('Valores Preditos')
+plt.title('Valores Reais vs. Valores Preditos')
+plt.show()
+
+## Calcula a diferença entre os valores reais x valores preditos (residuos)
+
+residuals = y_test - y_pred
+
+# Cria um gráfico de resíduos
+plt.figure(figsize=(10, 6))
+plt.scatter(y_pred, residuals, alpha=0.5)
+plt.axhline(y=0, color='r', linestyle='--')
+plt.xlabel('Valores Preditos')
+plt.ylabel('Resíduos')
+plt.title('Gráfico de Resíduos')
+plt.grid(True)
+plt.show()
