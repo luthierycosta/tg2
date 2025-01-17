@@ -14,7 +14,7 @@ DATAFRAMES_PATH = './dataframes/'
 TABLES_PATH = './material_overleaf/tabelas/'
 
 TRANSFORMED_DF_PATH = DATAFRAMES_PATH + 'WDItransformada.csv'
-MAIN_DF_PATH = DATAFRAMES_PATH + 'WDIPreProcessada.csv'
+PREPROCESSED_DF_PATH = DATAFRAMES_PATH + 'WDIPreProcessada.csv'
 RAW_DF_PATH = DATAFRAMES_PATH + 'WDICSV.csv'
 COUNTRIES_PATH = DATAFRAMES_PATH + 'WDICountry.csv'
 INDICATORS_PATH = DATAFRAMES_PATH + 'WDISeries.csv'
@@ -29,16 +29,15 @@ FEATURES_TO_SELECT = 32
 
 ### Extração dos dados
 
-wdi = pd.read_csv(MAIN_DF_PATH)
-preprocessed_wdi = pd.read_csv(TRANSFORMED_DF_PATH)
+wdi = pd.read_csv(PREPROCESSED_DF_PATH)
+transformed_wdi = pd.read_csv(TRANSFORMED_DF_PATH)
 raw_wdi = pd.read_csv(RAW_DF_PATH)
 countries = pd.read_csv(COUNTRIES_PATH, index_col='Country Code')
 indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
 
 
-### Processamento dos conjuntos de teste e treinamento
+### Separa as variáveis de entrada (X) e variável alvo (y)
 
-# Separa as variáveis de entrada (X) e variável alvo (y)
 [gdp_growth_code] = indicators.query("`Indicator Name` == 'GDP growth (annual %)'").index
 wdi = wdi.set_index(['Country Name', 'Country Code', 'Year'])
 X = wdi.drop(columns=[gdp_growth_code])
@@ -48,7 +47,7 @@ y = wdi[gdp_growth_code]
 # scaler = StandardScaler()
 # X_scaled = scaler.fit_transform(X, y)
 
-# Preenche os valores vazios no conjunto de entrada
+# Preenche os valores vazios no conjunto de entrada por inferência
 
 imputer = KNNImputer(n_neighbors=KNN_IMPUTER_NEIGHBOURS, weights='uniform')
 X_imputed = imputer.fit_transform(X)
@@ -56,11 +55,19 @@ X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
 
 
 
-# Separa em conjuntos de teste e treinamento
-X_train, X_test, y_train, y_test = train_test_split(
-    X_imputed, y, test_size=TEST_SET_RATIO, random_state=0)
+### Separa em conjuntos de teste e treinamento
 
-# Filtra os melhores indicadores, conforme parâmetro
+X_train, X_test, y_train, y_test = train_test_split(
+    X_imputed, y, test_size=TEST_SET_RATIO, random_state=200)
+
+
+### Seleciona os melhores indicadores, conforme parâmetro
+
+biased_growth_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
+
+X_train = X_train.drop(columns=[c for c in biased_growth_indicators.index if c in X_train.columns])
+X_test = X_test.drop(columns=[c for c in biased_growth_indicators.index if c in X_test.columns])
+
 feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit(X_train, y_train)
 X_train_selected = pd.DataFrame(
@@ -74,16 +81,24 @@ X_test_selected = pd.DataFrame(
     index = X_test.index
 )
 
+
+
+
 # Cria tabela dos melhores indicadores selecionados
+selector_scores = pd.DataFrame(zip(X_train.columns, feature_selector.scores_)).set_index(0)
+indicators['Score'] = selector_scores
+
 selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
+
+
 selected_indicators.to_csv(
     TABLES_PATH +'selecaoIndicadores.csv',
-    columns = ['Indicator Name']
+    columns = ['Indicator Name', 'Score']
 )
 
 
 
-### Aplicação dos modelos
+### APLICAÇÃO DOS MODELOS
 
 random_forest = RandomForestRegressor(random_state=0)
 random_forest.fit(X_train_selected, y_train)

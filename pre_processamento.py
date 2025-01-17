@@ -8,7 +8,7 @@ DATAFRAMES_PATH = './dataframes/'
 TABLES_PATH = './material_overleaf/tabelas/'
 
 TRANSFORMED_DF_PATH = DATAFRAMES_PATH + 'WDItransformada.csv'
-MAIN_DF_PATH = DATAFRAMES_PATH + 'WDIPreProcessada.csv'
+PREPROCESSED_DF_PATH = DATAFRAMES_PATH + 'WDIPreProcessada.csv'
 RAW_DF_PATH = DATAFRAMES_PATH + 'WDICSV.csv'
 COUNTRIES_PATH = DATAFRAMES_PATH + 'WDICountry.csv'
 INDICATORS_PATH = DATAFRAMES_PATH + 'WDISeries.csv'
@@ -105,4 +105,4 @@ filtered_indicators.sort_values(['Series Code']).to_csv(
     columns = ['Indicator Name']
 )
 
-wdi.to_csv(MAIN_DF_PATH, index=False)
+wdi.to_csv(PREPROCESSED_DF_PATH, index=False)
