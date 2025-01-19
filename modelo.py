@@ -61,25 +61,28 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_imputed, y, test_size=TEST_SET_RATIO, random_state=200)
 
 
+### Remove indicadores enviesados
+
+biased_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
+# biased_indicators = indicators[indicators.index.str.contains('GDP')]
+
+X_train = X_train.drop(columns=[c for c in biased_indicators.index if c in X_train.columns])
+X_test = X_test.drop(columns=[c for c in biased_indicators.index if c in X_test.columns])
+
+
 ### Seleciona os melhores indicadores, conforme parâmetro
 
-biased_growth_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
-
-X_train = X_train.drop(columns=[c for c in biased_growth_indicators.index if c in X_train.columns])
-X_test = X_test.drop(columns=[c for c in biased_growth_indicators.index if c in X_test.columns])
 
 feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit(X_train, y_train)
 X_train_selected = pd.DataFrame(
     feature_selector.transform(X_train),
     columns = X_train.columns[feature_selector.get_support()],
-    index = X_train.index
-)
+    index = X_train.index)
 X_test_selected = pd.DataFrame(
     feature_selector.transform(X_test),
     columns = X_test.columns[feature_selector.get_support()],
-    index = X_test.index
-)
+    index = X_test.index)
 
 
 
@@ -88,13 +91,12 @@ X_test_selected = pd.DataFrame(
 selector_scores = pd.DataFrame(zip(X_train.columns, feature_selector.scores_)).set_index(0)
 indicators['Score'] = selector_scores
 
-selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
+selected_indicators = indicators[indicators.index.isin(feature_selector.get_support())]
 
 
 selected_indicators.to_csv(
     TABLES_PATH +'selecaoIndicadores.csv',
-    columns = ['Indicator Name', 'Score']
-)
+    columns = ['Indicator Name', 'Score'])
 
 
 
@@ -121,7 +123,7 @@ plt.show()
 
 ## Calcula a diferença entre os valores reais x valores preditos (residuos)
 
-residuals = y_test - y_pred
+residuals = abs(y_test - y_pred)
 
 # Cria um gráfico de resíduos
 plt.figure(figsize=(10, 6))
