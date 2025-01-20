@@ -33,8 +33,7 @@ indicators = pd.read_csv(INDICATORS_PATH, index_col='Series Code')
 indicators['Indicator Name'] = indicators['Indicator Name'].map(lambda x: x if len(x) <= 49 else x[:49] + '...')
 indicators.sort_values(['Topic']).to_csv(
     TABLES_PATH + 'indicadoresfull.csv',
-    columns = ['Indicator Name']
-)
+    columns = ['Indicator Name'])
 
 
 ### Variáveis para análise sobre o dataset inicial
@@ -102,7 +101,6 @@ wdi = wdi.dropna(axis=1, thresh=INDICATORS_NOT_NAN_THRESHOLD*len(wdi))
 filtered_indicators = indicators[indicators.index.isin(wdi.columns)]
 filtered_indicators.sort_values(['Series Code']).to_csv(
     TABLES_PATH + 'indicadoresFiltro.csv',
-    columns = ['Indicator Name']
-)
+    columns = ['Indicator Name'])
 
 wdi.to_csv(PREPROCESSED_DF_PATH, index=False)

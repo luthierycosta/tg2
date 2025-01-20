@@ -126,7 +126,7 @@ results['Abs. Error'] = abs(results[gdp_growth_code] - results['Prediction'])
 # Cria um gráfico de disperção
 plt.scatter(y_test, y_pred, alpha=0.5)
 plt.axis('equal')
-plt.plot([-50, 50], [-50, 50], color='r')
+plt.plot([-50, 50], [-50, 50], color='g')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Preditos')
 plt.title('Valores Reais vs. Valores Preditos')

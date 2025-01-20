@@ -18,18 +18,15 @@ def get_wdi_dataframe():
     return pd \
         .read_csv(
             EXTRACTS_PATH + RAW_FILENAME,
-            usecols= lambda col: col!='Indicator Name'
-            ) \
+            usecols= lambda col: col!='Indicator Name') \
         .melt(
             id_vars=['Country Name', 'Country Code', 'Indicator Code'],
             var_name='Year',
-            value_name = 'Value'
-            ) \
+            value_name = 'Value') \
         .pivot(
             index=['Country Name', 'Country Code', 'Year'],
             columns='Indicator Code',
-            values='Value'
-            ) \
+            values='Value') \
         .reset_index()
 
 
