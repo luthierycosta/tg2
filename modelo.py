@@ -105,20 +105,32 @@ selected_indicators.to_csv(
 random_forest = RandomForestRegressor(random_state=0)
 random_forest.fit(X_train_selected, y_train)
 
+
+y_pred = random_forest.predict(X_test_selected)
 score = random_forest.score(X_test_selected, y_test)
 
+
+### Criação do dataframe para análise sobre o resultado
+
+results = y_test.reset_index()
+results = results.join(countries[['Region']], on='Country Code')
+results['Prediction'] = y_pred
+results['Abs. Error'] = abs(results[gdp_growth_code] - results['Prediction'])
 
 
 ### Criação de gráficos para análise sobre o resultado
 ## Calcula a previsão sobre os dados de teste
 
-y_pred = random_forest.predict(X_test_selected)
+
 
 # Cria um gráfico de disperção
 plt.scatter(y_test, y_pred, alpha=0.5)
+plt.axis('equal')
+plt.plot([-50, 50], [-50, 50], color='r')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Preditos')
 plt.title('Valores Reais vs. Valores Preditos')
+plt.grid(True)
 plt.show()
 
 ## Calcula a diferença entre os valores reais x valores preditos (residuos)
