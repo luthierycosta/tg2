@@ -43,16 +43,28 @@ wdi = wdi.set_index(['Country Name', 'Country Code', 'Year'])
 X = wdi.drop(columns=[gdp_growth_code])
 y = wdi[gdp_growth_code]
 
-# Normaliza o conjunto de entrada
+### Normaliza o conjunto de entrada
 # scaler = StandardScaler()
 # X_scaled = scaler.fit_transform(X, y)
 
-# Preenche os valores vazios no conjunto de entrada por inferência
+
+### Preenche os valores vazios no conjunto de entrada por inferência
 
 imputer = KNNImputer(n_neighbors=KNN_IMPUTER_NEIGHBOURS, weights='uniform')
 X_imputed = imputer.fit_transform(X)
 X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
 
+
+### Remove indicadores triviais
+
+# Usa critério: indicadores que contém "growth" ("crescimento") no nome
+# trivial_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
+
+# Usando critério: indicadores que contém "GDP" ("PIB") no código
+trivial_indicators = indicators[indicators['Indicator Name'].str.contains('GDP')]
+
+X_imputed = X_imputed.drop(
+    columns=[c for c in trivial_indicators.index if c in X_imputed.columns])
 
 
 ### Separa em conjuntos de teste e treinamento
@@ -61,24 +73,17 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_imputed, y, test_size=TEST_SET_RATIO, random_state=200)
 
 
-### Remove indicadores enviesados
-
-biased_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
-# biased_indicators = indicators[indicators.index.str.contains('GDP')]
-
-X_train = X_train.drop(columns=[c for c in biased_indicators.index if c in X_train.columns])
-X_test = X_test.drop(columns=[c for c in biased_indicators.index if c in X_test.columns])
-
-
 ### Seleciona os melhores indicadores, conforme parâmetro
 
 
 feature_selector = SelectKBest(r_regression, k=FEATURES_TO_SELECT)
 feature_selector.fit(X_train, y_train)
+
 X_train_selected = pd.DataFrame(
     feature_selector.transform(X_train),
     columns = X_train.columns[feature_selector.get_support()],
     index = X_train.index)
+
 X_test_selected = pd.DataFrame(
     feature_selector.transform(X_test),
     columns = X_test.columns[feature_selector.get_support()],
@@ -91,7 +96,7 @@ X_test_selected = pd.DataFrame(
 selector_scores = pd.DataFrame(zip(X_train.columns, feature_selector.scores_)).set_index(0)
 indicators['Score'] = selector_scores
 
-selected_indicators = indicators[indicators.index.isin(feature_selector.get_support())]
+selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
 
 
 selected_indicators.to_csv(
@@ -110,6 +115,7 @@ y_pred = random_forest.predict(X_test_selected)
 score = random_forest.score(X_test_selected, y_test)
 
 
+
 ### Criação do dataframe para análise sobre o resultado
 
 results = y_test.reset_index()
@@ -118,7 +124,17 @@ results['Prediction'] = y_pred
 results['Abs. Error'] = abs(results[gdp_growth_code] - results['Prediction'])
 
 
+
 ### Criação de gráficos para análise sobre o resultado
+
+## Gráfico da média dos erros absolutos por ano
+
+results_per_year = results.groupby('Year')['Abs. Error'].mean()
+
+results_per_country = results.groupby('Country Name')['Abs. Error'].mean()
+
+
+
 ## Calcula a previsão sobre os dados de teste
 
 

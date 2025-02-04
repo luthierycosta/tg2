@@ -30,5 +30,7 @@ def get_wdi_dataframe():
         .reset_index()
 
 
+### Salva dataframe resultante em arquivo csv
+
 data = get_wdi_dataframe()
 data.to_csv(PREPROCESSED_DF_PATH, index=False)

@@ -62,20 +62,6 @@ nan_per_country = wdi.groupby(['Country Code', 'Country Name']) \
     .to_frame('NaN values') \
     .reset_index()
 
-    
-### Criação de gráficos e tabelas para análise sobre o dataset inicial
-
-nan_per_indicator['NaN values'].plot.hist(
-    xlabel='Qtd. de valores nulos',
-    ylabel='Frequência de indicadores',
-    bins=20,
-    grid=True)
-nan_per_year.plot(
-    xlabel='Ano',
-    ylabel='Valores nulos',
-    ylim=(0, 400000),
-    grid=True)
-
 
 ### Pré-processamento
 
@@ -103,4 +89,23 @@ filtered_indicators.sort_values(['Series Code']).to_csv(
     TABLES_PATH + 'indicadoresFiltro.csv',
     columns = ['Indicator Name'])
 
+
+### Salva dataframe resultante do pré-processamento em arquivo csv
+
 wdi.to_csv(PREPROCESSED_DF_PATH, index=False)
+
+
+### Criação de gráficos e tabelas para análise sobre o dataset inicial
+# obs: executar um plot por vez
+
+nan_per_indicator['NaN values'].plot.hist(
+    xlabel='Qtd. de valores nulos',
+    ylabel='Frequência de indicadores',
+    bins=20,
+    grid=True)
+
+nan_per_year.plot(
+    xlabel='Ano',
+    ylabel='Valores nulos',
+    ylim=(0, 400000),
+    grid=True)
