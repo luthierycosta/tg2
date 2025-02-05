@@ -2,6 +2,7 @@
 """
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.feature_selection import SelectKBest, r_regression
 from sklearn.model_selection import train_test_split
@@ -96,13 +97,8 @@ X_test_selected = pd.DataFrame(
 selector_scores = pd.DataFrame(zip(X_train.columns, feature_selector.scores_)).set_index(0)
 indicators['Score'] = selector_scores
 
-selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)]
-
-
-selected_indicators.to_csv(
-    TABLES_PATH +'selecaoIndicadores.csv',
-    columns = ['Indicator Name', 'Score'])
-
+selected_indicators = indicators[indicators.index.isin(X_train_selected.columns)][[
+    'Topic', 'Indicator Name', 'Score']]
 
 
 ### APLICAÇÃO DOS MODELOS
@@ -133,13 +129,27 @@ results.insert(2, 'Region', results.pop('Region'))
 
 ## Tabelas ilustrando dos erros absolutos
 
-results_per_year = results.groupby('Year')['Absolute Error'].mean()
-
 results_per_country = results.groupby('Country Name')['Absolute Error'].mean()
 
-results_per_region = results.groupby('Region')['Absolute Error'].mean()
+# results_per_region = results.groupby('Region')['Absolute Error'].mean()
+results_per_region = results[results['Region'].isna()].groupby('Country Name')['Absolute Error'].mean()
 
 results_brazil = results[results['Country Code'] =='BRA']
+
+results_per_year = results.groupby('Year')['Absolute Error'].mean()
+plt.figure(figsize=(10, 6))
+plt.xlabel('Anos das predições')
+plt.ylabel('Erro')
+plt.title('Erro médio absoluto por ano')
+plt.grid(True)
+plt.plot(
+    results_per_year.index,
+    results_per_year.values,
+    marker='o',
+    linestyle='-',
+    color='b')
+plt.xticks([y for y in results_per_year.index if y%5==0])
+plt.show()
 
 
 
