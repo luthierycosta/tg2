@@ -119,19 +119,27 @@ score = random_forest.score(X_test_selected, y_test)
 ### Criação do dataframe para análise sobre o resultado
 
 results = y_test.reset_index()
+results = results.rename(columns={gdp_growth_code: 'Real'})
+results['Predicted'] = y_pred
+results['Absolute Error'] = abs(results['Real'] - results['Predicted'])
+
 results = results.join(countries[['Region']], on='Country Code')
-results['Prediction'] = y_pred
-results['Abs. Error'] = abs(results[gdp_growth_code] - results['Prediction'])
+results.insert(2, 'Region', results.pop('Region'))
+
 
 
 
 ### Criação de gráficos para análise sobre o resultado
 
-## Gráfico da média dos erros absolutos por ano
+## Tabelas ilustrando dos erros absolutos
 
-results_per_year = results.groupby('Year')['Abs. Error'].mean()
+results_per_year = results.groupby('Year')['Absolute Error'].mean()
 
-results_per_country = results.groupby('Country Name')['Abs. Error'].mean()
+results_per_country = results.groupby('Country Name')['Absolute Error'].mean()
+
+results_per_region = results.groupby('Region')['Absolute Error'].mean()
+
+results_brazil = results[results['Country Code'] =='BRA']
 
 
 
