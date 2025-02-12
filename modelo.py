@@ -2,12 +2,12 @@
 """
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 from sklearn.feature_selection import SelectKBest, r_regression
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import KNNImputer
+from sklearn.tree import plot_tree
 
 ### Constantes de ambiente
 
@@ -62,16 +62,20 @@ X_imputed = pd.DataFrame(X_imputed, columns=X.columns, index=X.index)
 # trivial_indicators = indicators[indicators['Indicator Name'].str.contains('growth')]
 
 # Usando critério: indicadores que contém "GDP" ("PIB") no código
-trivial_indicators = indicators[indicators['Indicator Name'].str.contains('GDP')]
+# trivial_indicators = indicators[indicators['Indicator Name'].str.contains('GDP')]
 
-X_imputed = X_imputed.drop(
+trivial_indicators = indicators[
+#    indicators['Indicator Name'].str.contains('growth') |
+    indicators['Indicator Name'].str.contains('GDP')]
+
+X_minus_trivials = X_imputed.drop(
     columns=[c for c in trivial_indicators.index if c in X_imputed.columns])
 
 
 ### Separa em conjuntos de teste e treinamento
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X_imputed, y, test_size=TEST_SET_RATIO, random_state=200)
+    X_minus_trivials, y, test_size=TEST_SET_RATIO, random_state=200)
 
 
 ### Seleciona os melhores indicadores, conforme parâmetro
@@ -127,6 +131,11 @@ results.insert(2, 'Region', results.pop('Region'))
 
 ### Criação de gráficos para análise sobre o resultado
 
+## Tabela de indicadores triviais removidos
+
+trivial_indicators[['Topic', 'Indicator Name']].to_csv(
+    TABLES_PATH + 'indicadoresRetirados.csv')
+
 ## Tabelas ilustrando dos erros absolutos
 
 results_per_country = results.groupby('Country Name')['Absolute Error'].mean()
@@ -179,4 +188,15 @@ plt.xlabel('Valores Preditos')
 plt.ylabel('Resíduos')
 plt.title('Gráfico de Resíduos')
 plt.grid(True)
+plt.show()
+
+## Extrai uma árvore de decisão individual do modelo e a plota
+
+tree = random_forest.estimators_[0]
+
+plt.figure(figsize=(40,30))
+plot_tree(tree, max_depth=3, feature_names=list(X_train_selected.columns), filled=True)
+plt.title('Decision Tree from RandomForestRegressor')
+plt.xlabel('Features')
+plt.ylabel('Decision Path')
 plt.show()
