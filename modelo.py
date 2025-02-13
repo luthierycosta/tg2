@@ -111,6 +111,8 @@ random_forest = RandomForestRegressor(random_state=0)
 random_forest.fit(X_train_selected, y_train)
 
 
+### AFERIÇÃO DO DESEMPENHO
+
 y_pred = random_forest.predict(X_test_selected)
 score = random_forest.score(X_test_selected, y_test)
 
@@ -169,7 +171,7 @@ plt.show()
 # Cria um gráfico de disperção
 plt.scatter(y_test, y_pred, alpha=0.5)
 plt.axis('equal')
-plt.plot([-50, 50], [-50, 50], color='g')
+plt.plot([-50, 50], [-50, 50], color='g', label='Reta ideal (erro zero)')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Preditos')
 plt.title('Valores Reais vs. Valores Preditos')
@@ -190,13 +192,25 @@ plt.title('Gráfico de Resíduos')
 plt.grid(True)
 plt.show()
 
-## Extrai uma árvore de decisão individual do modelo e a plota
+## Extrai uma árvore de decisão individual do modelo 
 
-tree = random_forest.estimators_[0]
+tree0 = random_forest.estimators_[0]
 
+## Plota árvore no tamanho original (centenas de nós, ilegível)
 plt.figure(figsize=(40,30))
-plot_tree(tree, max_depth=3, feature_names=list(X_train_selected.columns), filled=True)
-plt.title('Decision Tree from RandomForestRegressor')
-plt.xlabel('Features')
-plt.ylabel('Decision Path')
+plot_tree(
+    tree0,
+    feature_names=[indicators['Indicator Name'][i] for i in X_train_selected.columns],
+    filled=True)
 plt.show()
+
+## Plota árvore limitando a profundidade para legibilidade
+plt.figure(figsize=(40,30))
+plot_tree(
+    tree0,
+    max_depth=2,
+    feature_names=[indicators['Indicator Name'][i] for i in X_train_selected.columns],
+    filled=True,
+    fontsize=15)
+plt.show()
+
