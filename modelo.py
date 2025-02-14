@@ -8,6 +8,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import KNNImputer
 from sklearn.tree import plot_tree
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from scipy.stats import linregress
+
 
 ### Constantes de ambiente
 
@@ -115,6 +118,8 @@ random_forest.fit(X_train_selected, y_train)
 
 y_pred = random_forest.predict(X_test_selected)
 score = random_forest.score(X_test_selected, y_test)
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
 
 
 
@@ -169,9 +174,21 @@ plt.show()
 
 
 # Cria um gráfico de disperção
+
+linear_regression = linregress(y_test, y_pred)
 plt.scatter(y_test, y_pred, alpha=0.5)
 plt.axis('equal')
-plt.plot([-50, 50], [-50, 50], color='g', label='Reta ideal (erro zero)')
+plt.plot(
+    [-50, 60],
+    [-50, 60],
+    color='g',
+    label='Reta ideal (com erro zero)')
+plt.plot(
+    y_test,
+    linear_regression.intercept + linear_regression.slope*y_test,
+    color='r',
+    label='Regressão linear')
+plt.legend()
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Preditos')
 plt.title('Valores Reais vs. Valores Preditos')
