@@ -176,6 +176,7 @@ plt.show()
 # Cria um gráfico de disperção
 
 linear_regression = linregress(y_test, y_pred)
+plt.figure(figsize=(10, 6))
 plt.scatter(y_test, y_pred, alpha=0.5)
 plt.axis('equal')
 plt.plot(
